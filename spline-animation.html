@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Spline Animation - Tree Render</title>
+
+	<link rel="icon" href="Images/Icon.png">
+	<link rel="stylesheet" href="Menu.css">
+	<script src="Menu.js"></script>
+</head>
+
+<body>
+	<div id="scene">
+		<div id="skele">
+			<h2>Skeleton Renders</h2>
+			<a id="nodeSimp" href="node-simplification.html">Node Simplification</a>
+			<a id="spliDiv" href="spline-divisions.html">Spline Divisions</a>
+			<a id="skeAnim" href="skeleton-animation.html">Skeleton Animation</a>
+		</div>
+		<div id="render">
+			<h2>Scene Renders</h2>
+			<a id="roughR" href="rough-render.html">Rough Render</a>
+			<a id="splineR" href="./">Spline Render</a>
+			<a id="animR" style="background-color: #38352e">Animation Render</a>
+		</div>
+	</div>
+	<div id="menuicons">
+		<div class="menuicon">
+			<div class="tt" id="setTT">Information</div>
+			<div class="menuiconimg" id="setIcon" onclick="showRightMenu('info', 25)">
+				<img src="Images/Info.png">
+			</div>
+		</div>
+	</div>
+	<div id="info" class="menu">
+		<div id="infoX" class="menuX" onclick="hideRightMenu('info')">×</div>
+		<h1>Tree Render</h1>
+		<h2>Spline Animation</h2>
+		<h3>
+			Made by:<br>
+			<a href="https://github.com/darkzant" target="_blank" rel="noopener noreferrer">Étienne Mitchell-Bouchard</a><br>
+		</h3>
+		<br>
+		<p>
+			We combine the spline render and the skeleton animation to render a fully animated scene of the tree.<br> <br>
+			Use <b>Left Click</b> to look around and <b>Right Click</b> to slide the camera. Use the <b>Mouse Wheel</b> to zoom.<br>
+			Press <b>[ Space ]</b> to generate a new tree.
+		</p>
+	</div>
+
+	<script src="js/parallel.js"></script>
+	<script src="js/three.js"></script>
+	<script src="js/OrbitControls.js"></script>
+	<script src="js/BufferGeometryUtils.js"></script>
+	<script src="TP3_Data.js"></script>
+	<script src="TP3_Geometry.js"></script>
+	<script src="TP3_Render.js"></script>
+	<script src="TP3_Lindenmayer.js"></script>
+	<script src="TP3_Physics.js"></script>
+	<script src="js/MainInitStatic.js"></script>
+	<script src="js/WorldInit.js"></script>
+	<script>
+		const data = TP3.Data.SmallTree;
+		const lengthDivisions = 4;
+		const radialDivisions = 5;
+		const dt = 0.01;
+		const leavesCutoff = 0.1;
+		const leavesDensity = 4;
+		var [[trunkGeom, leavesGeom, applesGeom], nodeTree] = generateTree();
+
+
+		function generateTree() {
+			const grammar = TP3.Lindenmayer.iterateGrammarProb(data.str, data.dict, data.iters - 1);
+			const nodeTree = TP3.Lindenmayer.generateSkeleton(grammar, data.theta, data.alpha, data.decay);
+			TP3.Geometry.simplifySkeleton(nodeTree);
+			TP3.Geometry.generateSegmentsHermite(nodeTree, lengthDivisions, radialDivisions);
+			TP3.Physics.initTree(nodeTree);
+			return [TP3.Render.drawTreeHermite(nodeTree, scene, data.alpha, leavesCutoff, leavesDensity), nodeTree];
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+
+			var timeS = (new Date().getTime()) / 1000;
+			TP3.Physics.applyForces(nodeTree, dt, timeS);
+			// Ligne originale, nous n'avons pas eu le temps d'implémenter l'animation de cette manière avec les indices
+			//TP3.Render.updateTreeHermite(trunkGeom.attributes.position.array, leavesGeom.attributes.position.array, applesGeom.attributes.position.array, nodeTree);
+			// Nous avons modifié l'appel de la fonction pour qu'elle prenne en paramètre les BufferGeometry comme ça on peut utiliser directement les points
+			TP3.Render.updateTreeHermite(trunkGeom, leavesGeom, applesGeom, nodeTree);
+
+			trunkGeom.attributes.position.needsUpdate = true;
+			leavesGeom.attributes.position.needsUpdate = true;
+			applesGeom.attributes.position.needsUpdate = true;
+			trunkGeom.computeVertexNormals();
+			leavesGeom.computeVertexNormals();
+			applesGeom.computeVertexNormals();
+
+			renderer.render(scene, camera);
+		}
+		animate();
+
+		function onDocumentKeyDown(event) {
+			var keyCode = event.which;
+			if (keyCode == 32) {
+				clearScene();
+				createWorld(scene);
+				[[trunkGeom, leavesGeom, applesGeom], nodeTree] = generateTree();
+			}
+		}
+		document.addEventListener("keydown", onDocumentKeyDown, false);
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Skeleton Animation - Tree Render</title>
+
+	<link rel="icon" href="Images/Icon.png">
+	<link rel="stylesheet" href="Menu.css">
+	<script src="Menu.js"></script>
+</head>
+
+<body>
+	<div id="scene">
+		<div id="skele">
+			<h2>Skeleton Renders</h2>
+			<a id="nodeSimp" href="node-simplification.html">Node Simplification</a>
+			<a id="spliDiv" href="spline-divisions.html">Spline Divisions</a>
+			<a id="skeAnim" style="background-color: #38352e">Skeleton Animation</a>
+		</div>
+		<div id="render">
+			<h2>Scene Renders</h2>
+			<a id="roughR" href="rough-render.html">Rough Render</a>
+			<a id="splineR" href="./">Spline Render</a>
+			<!--			<a id="animR" href="spline-animation.html">Animation Render</a>-->
+		</div>
+	</div>
+	<div id="menuicons">
+		<div class="menuicon">
+			<div class="tt" id="setTT">Information</div>
+			<div class="menuiconimg" id="setIcon" onclick="showRightMenu('info', 25)">
+				<img src="Images/Info.png">
+			</div>
+		</div>
+	</div>
+	<div id="info" class="menu">
+		<div id="infoX" class="menuX" onclick="hideRightMenu('info')">×</div>
+		<h1>Tree Render</h1>
+		<h2>Skeleton Animation</h2>
+		<h3>
+			Made by:<br>
+			<a href="https://github.com/darkzant" target="_blank" rel="noopener noreferrer">Étienne Mitchell-Bouchard</a><br>
+		</h3>
+		<br>
+		<p>
+			We animate the skeleton of the tree using physics.<br>
+			We apply gravity, wind and a restitution force to the branches so that they move realistically.<br><br>
+			Use <b>Left Click</b> to look around and <b>Right Click</b> to slide the camera. Use the <b>Mouse Wheel</b> to zoom.<br>
+		</p>
+	</div>
+	<script src="js/parallel.js"></script>
+	<script src="js/three.js"></script>
+	<script src="js/OrbitControls.js"></script>
+	<script src="js/BufferGeometryUtils.js"></script>
+	<script src="TP3_Data.js"></script>
+	<script src="TP3_Geometry.js"></script>
+	<script src="TP3_Render.js"></script>
+	<script src="TP3_Lindenmayer.js"></script>
+	<script src="TP3_Physics.js"></script>
+	<script src="js/MainInitStatic.js"></script>
+	<script>
+		const data = TP3.Data.SmallTree;
+		const dt = 0.01;
+		const [treeGeom, nodeTree] = generateTree();
+
+		function generateTree() {
+			const grammar = TP3.Lindenmayer.iterateGrammar(data.str, data.dict, data.iters - 1);
+			const nodeTree = TP3.Lindenmayer.generateSkeleton(grammar, data.theta, data.alpha, data.decay);
+			TP3.Geometry.simplifySkeleton(nodeTree);
+			TP3.Physics.initTree(nodeTree);
+			return [TP3.Render.drawTreeSkeleton(nodeTree, scene), nodeTree];
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+
+			var timeS = (new Date().getTime()) / 1000;
+			TP3.Physics.applyForces(nodeTree, dt, timeS);
+			TP3.Render.updateTreeSkeleton(treeGeom.attributes.position.array, nodeTree);
+			treeGeom.attributes.position.needsUpdate = true;
+
+			renderer.render(scene, camera);
+		}
+		animate();
+	</script>
+</body>
+
+</html>

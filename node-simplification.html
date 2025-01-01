@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Node Simplification - Tree Render</title>
+
+	<link rel="icon" href="Images/Icon.png">
+	<link rel="stylesheet" href="Menu.css">
+	<script src="Menu.js"></script>
+</head>
+
+<body>
+	<div id="scene">
+		<div id="skele">
+			<h2>Skeleton Renders</h2>
+			<a id="nodeSimp" style="background-color: #38352e">Node Simplification</a>
+			<a id="spliDiv" href="spline-divisions.html">Spline Divisions</a>
+			<a id="skeAnim" href="skeleton-animation.html">Skeleton Animation</a>
+		</div>
+		<div id="render">
+			<h2>Scene Renders</h2>
+			<a id="roughR" href="rough-render.html">Rough Render</a>
+			<a id="splineR" href="./">Spline Render</a>
+<!--			<a id="animR" href="spline-animation.html">Animation Render</a>-->
+		</div>
+	</div>
+	<div id="menuicons">
+		<div class="menuicon">
+			<div class="tt" id="setTT">Information</div>
+			<div class="menuiconimg" id="setIcon" onclick="showRightMenu('info', 25)">
+				<img src="Images/Info.png">
+			</div>
+		</div>
+	</div>
+	<div id="info" class="menu">
+		<div id="infoX" class="menuX" onclick="hideRightMenu('info')">×</div>
+		<h1>Tree Render</h1>
+		<h2>Node Simplification</h2>
+		<h3>
+			Made by:<br>
+			<a href="https://github.com/darkzant" target="_blank" rel="noopener noreferrer">Étienne Mitchell-Bouchard</a><br>
+		</h3>
+		<br>
+		<p>
+			Some nodes of the tree are redundant. <br>
+			We use the angle between two nodes to calculate if a node is redundant. <br>
+			If the angle is below a certain threshold, we remove the concerned node. <br> <br>
+			<span style="color: #00ff00">Green Nodes: Non-redundant</span><br>
+			<span style="color: #ff4545">Red Nodes: Redundant</span> <br><br>
+			Use <b>Left Click</b> to look around and <b>Right Click</b> to slide the camera. Use the <b>Mouse Wheel</b> to zoom.<br>
+		</p>
+	</div>
+	<script src="js/parallel.js"></script>
+	<script src="js/three.js"></script>
+	<script src="js/OrbitControls.js"></script>
+	<script src="js/BufferGeometryUtils.js"></script>
+	<script src="TP3_Data.js"></script>
+	<script src="TP3_Geometry.js"></script>
+	<script src="TP3_Render.js"></script>
+	<script src="TP3_Lindenmayer.js"></script>
+	<script src="js/MainInit.js"></script>
+	<script>
+		const data = TP3.Data.SmallTree;
+
+		const grammar = TP3.Lindenmayer.iterateGrammar(data.str, data.dict, data.iters);
+		const nodeTree = TP3.Lindenmayer.generateSkeleton(grammar, data.theta, data.alpha, data.decay);
+
+		TP3.Render.drawTreeNodes(nodeTree, scene, 0xff0000, 0.04);
+		TP3.Geometry.simplifySkeleton(nodeTree);
+		TP3.Render.drawTreeNodes(nodeTree, scene);
+		TP3.Render.drawTreeSkeleton(nodeTree, scene, 0x6A6A6A);
+	</script>
+</body>
+
+</html>
